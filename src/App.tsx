@@ -97,8 +97,11 @@ function App() {
           const ta = Number(tarifAwal) || 0
           const ja = Number(jamAwal) || 0
           const tb = Number(tarifBerikutnya) || 0
+          const wb = Number(waktuBerikutnya) || 1
           if (jam <= ja) return ta
-          return ta + (jam - ja) * tb
+          const r = jam - ja
+          const blocks = Math.ceil(r / wb)
+          return ta + blocks * tb
         }
         // progresif-terbatas
         const ta = Number(tarifAwal) || 0
@@ -255,13 +258,24 @@ function App() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Tarif Berikutnya (Rp/jam)</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Tarif Berikutnya (Rp/blok)</label>
                 <input
                   type="number"
                   min="0"
                   value={tarifBerikutnya}
                   onChange={(e) => setTarifBerikutnya(e.target.value)}
                   placeholder="3000"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Waktu Berikutnya (jam/blok)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={waktuBerikutnya}
+                  onChange={(e) => setWaktuBerikutnya(e.target.value)}
+                  placeholder="1"
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -390,7 +404,7 @@ function App() {
               </div>
               <div className="flex justify-between border-t border-blue-200 pt-2">
                 <span className="text-blue-600 font-medium">Tarif Parkir</span>
-                <span className="font-bold text-blue-800">{formatRupiah(result.fee)}</span>
+                <span className="font-bold text-blue-800">{result.fee === 0 ? "Gratis" : formatRupiah(result.fee)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-blue-600 font-medium">Tarif Inap</span>
