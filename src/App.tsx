@@ -1,421 +1,100 @@
 import { useState } from "react"
+import Calculator from "./Calculator"
+import CariSkema from "./CariSkema"
 
-type RateType = "flat" | "progresif" | "progresif-terbatas"
+type Page = "home" | "kalkulator" | "cari-skema"
 
-interface Result {
-  exact: string
-  rounded: string
-  fee: number
-}
+export default function App() {
+  const [page, setPage] = useState<Page>("home")
 
-const rateOptions: { value: RateType; label: string }[] = [
-  { value: "flat", label: "Flat" },
-  { value: "progresif", label: "Progresif" },
-  { value: "progresif-terbatas", label: "Progresif Terbatas" },
-]
+  if (page === "kalkulator") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+            <button
+              onClick={() => setPage("home")}
+              className="text-gray-600 hover:text-gray-800 font-medium cursor-pointer"
+            >
+              ← Kembali
+            </button>
+            <span className="font-bold text-gray-800">Parkir Calc</span>
+          </div>
+        </nav>
+        <main className="flex justify-center p-4 pt-8">
+          <Calculator />
+        </main>
+      </div>
+    )
+  }
 
-function App() {
-  const [dateIn, setDateIn] = useState("")
-  const [timeIn, setTimeIn] = useState("")
-  const [dateOut, setDateOut] = useState("")
-  const [timeOut, setTimeOut] = useState("")
-  const [result, setResult] = useState<Result | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  // Rate type
-  const [rateType, setRateType] = useState<RateType>("flat")
-
-  // Shared
-  const [gracePeriod, setGracePeriod] = useState("")
-
-  // Flat
-  const [tarifDasar, setTarifDasar] = useState("")
-
-  // Progresif
-  const [tarifAwal, setTarifAwal] = useState("")
-  const [jamAwal, setJamAwal] = useState("")
-  const [tarifBerikutnya, setTarifBerikutnya] = useState("")
-
-  // Progresif Terbatas
-  const [waktuAwal, setWaktuAwal] = useState("")
-  const [waktuBerikutnya, setWaktuBerikutnya] = useState("")
-  const [tarifMaksimal, setTarifMaksimal] = useState("")
-  const [waktuMaksimal, setWaktuMaksimal] = useState<12 | 24>(24)
-
-  const formatRupiah = (nominal: number) =>
-    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(nominal)
-
-  const handleCalculate = () => {
-    setError(null)
-
-    if (!dateIn || !timeIn || !dateOut || !timeOut) {
-      setError("Isi semua field tanggal dan waktu")
-      return
-    }
-
-    const masuk = new Date(`${dateIn}T${timeIn}`)
-    const keluar = new Date(`${dateOut}T${timeOut}`)
-
-    if (isNaN(masuk.getTime()) || isNaN(keluar.getTime())) {
-      setError("Format tanggal atau waktu tidak valid")
-      return
-    }
-
-    if (keluar <= masuk) {
-      setError("Waktu keluar harus setelah waktu masuk")
-      return
-    }
-
-    const diffMs = keluar.getTime() - masuk.getTime()
-    const totalMenit = Math.floor(diffMs / 60000)
-    const durasiBulat = Math.ceil(totalMenit / 60)
-
-    const jam = Math.floor(totalMenit / 60)
-    const menit = totalMenit % 60
-
-    const exactParts: string[] = []
-    if (jam > 0) exactParts.push(`${jam} jam`)
-    if (menit > 0) exactParts.push(`${menit} menit`)
-    const exact = exactParts.length > 0 ? exactParts.join(" ") : "0 menit"
-    const rounded = `${durasiBulat} jam`
-
-    // Hitung tarif — reset per 24 jam
-    let fee = 0
-    const gp = Number(gracePeriod) || 0
-
-    if (totalMenit > gp) {
-      const fullDays = Math.floor(durasiBulat / 24)
-      const remainder = durasiBulat % 24
-
-      const calcSegmen = (jam: number): number => {
-        if (jam <= 0) return 0
-        if (rateType === "flat") {
-          const td = Number(tarifDasar) || 0
-          return jam * td
-        }
-        if (rateType === "progresif") {
-          const ta = Number(tarifAwal) || 0
-          const ja = Number(jamAwal) || 0
-          const tb = Number(tarifBerikutnya) || 0
-          const wb = Number(waktuBerikutnya) || 1
-          if (jam <= ja) return ta
-          const r = jam - ja
-          const blocks = Math.ceil(r / wb)
-          return ta + blocks * tb
-        }
-        // progresif-terbatas
-        const ta = Number(tarifAwal) || 0
-        const wa = Number(waktuAwal) || 0
-        const tb = Number(tarifBerikutnya) || 0
-        const wb = Number(waktuBerikutnya) || 0
-        const tm = Number(tarifMaksimal) || 0
-
-        let f = 0
-        if (jam <= wa) {
-          f = ta
-        } else {
-          const r = jam - wa
-          const blocks = Math.ceil(r / wb)
-          f = ta + blocks * tb
-        }
-        if (jam > waktuMaksimal) return tm
-        if (tm > 0 && f > tm) return tm
-        return f
-      }
-
-      for (let i = 0; i < fullDays; i++) {
-        fee += calcSegmen(24)
-      }
-      fee += calcSegmen(remainder)
-    }
-
-    setResult({ exact, rounded, fee })
+  if (page === "cari-skema") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+            <button
+              onClick={() => setPage("home")}
+              className="text-gray-600 hover:text-gray-800 font-medium cursor-pointer"
+            >
+              ← Kembali
+            </button>
+            <span className="font-bold text-gray-800">Parkir Calc</span>
+          </div>
+        </nav>
+        <main className="flex justify-center p-4 pt-8">
+          <CariSkema />
+        </main>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-start justify-center p-4 pt-12">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-gray-800 text-center mb-6">
-          Kalkulator Parkir
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Parkir Calc</h1>
+          <p className="text-gray-500 text-lg">Kalkulator & pencarian skema parkir</p>
+        </div>
 
         <div className="space-y-4">
-          {/* Tanggal & Jam Masuk */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Tanggal & Jam Masuk
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={dateIn}
-                onChange={(e) => setDateIn(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <input
-                type="time"
-                value={timeIn}
-                onChange={(e) => setTimeIn(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Tanggal & Jam Keluar */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Tanggal & Jam Keluar
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={dateOut}
-                onChange={(e) => setDateOut(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <input
-                type="time"
-                value={timeOut}
-                onChange={(e) => setTimeOut(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Rate Type Selector */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Tipe Tarif
-            </label>
-            <div className="flex gap-2">
-              {rateOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setRateType(opt.value)}
-                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
-                    rateType === opt.value
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Dynamic Rate Fields */}
-          {rateType === "flat" && (
-            <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Tarif Dasar (Rp/jam)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={tarifDasar}
-                  onChange={(e) => setTarifDasar(e.target.value)}
-                  placeholder="5000"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Grace Period (menit)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={gracePeriod}
-                  onChange={(e) => setGracePeriod(e.target.value)}
-                  placeholder="15"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {rateType === "progresif" && (
-            <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Tarif Awal (Rp)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={tarifAwal}
-                  onChange={(e) => setTarifAwal(e.target.value)}
-                  placeholder="5000"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Jam Awal</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={jamAwal}
-                  onChange={(e) => setJamAwal(e.target.value)}
-                  placeholder="2"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Tarif Berikutnya (Rp/blok)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={tarifBerikutnya}
-                  onChange={(e) => setTarifBerikutnya(e.target.value)}
-                  placeholder="3000"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Waktu Berikutnya (jam/blok)</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={waktuBerikutnya}
-                  onChange={(e) => setWaktuBerikutnya(e.target.value)}
-                  placeholder="1"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Grace Period (menit)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={gracePeriod}
-                  onChange={(e) => setGracePeriod(e.target.value)}
-                  placeholder="15"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {rateType === "progresif-terbatas" && (
-            <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Tarif Awal (Rp)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={tarifAwal}
-                  onChange={(e) => setTarifAwal(e.target.value)}
-                  placeholder="5000"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Waktu Awal (jam)</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={waktuAwal}
-                  onChange={(e) => setWaktuAwal(e.target.value)}
-                  placeholder="2"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Tarif Berikutnya (Rp)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={tarifBerikutnya}
-                  onChange={(e) => setTarifBerikutnya(e.target.value)}
-                  placeholder="3000"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Waktu Berikutnya (jam/blok)</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={waktuBerikutnya}
-                  onChange={(e) => setWaktuBerikutnya(e.target.value)}
-                  placeholder="2"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Tarif Maksimal (Rp)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={tarifMaksimal}
-                  onChange={(e) => setTarifMaksimal(e.target.value)}
-                  placeholder="30000"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Waktu Maksimal</label>
-                <select
-                  value={waktuMaksimal}
-                  onChange={(e) => setWaktuMaksimal(Number(e.target.value) as 12 | 24)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value={12}>12 Jam</option>
-                  <option value={24}>24 Jam</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Grace Period (menit)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={gracePeriod}
-                  onChange={(e) => setGracePeriod(e.target.value)}
-                  placeholder="15"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Hitung Button */}
           <button
-            onClick={handleCalculate}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-lg cursor-pointer transition-colors"
+            onClick={() => setPage("kalkulator")}
+            className="w-full bg-white rounded-2xl shadow-lg p-8 text-left hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer group"
           >
-            Hitung
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V13.5zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V18zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V13.5zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V18zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V18zm2.498-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zM8.25 6h7.5v2.25h-7.5V6zM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800 mb-1">Kalkulator</h2>
+                <p className="text-gray-500 text-sm">Hitung tarif parkir berdasarkan durasi & tipe tarif</p>
+              </div>
+            </div>
           </button>
 
-          {/* Error */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-              <p className="text-sm font-medium text-red-600">{error}</p>
-            </div>
-          )}
-
-          {/* Result */}
-          {result && !error && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm space-y-2">
-              <p className="text-blue-600 font-medium mb-1">Hasil</p>
-              <div className="flex justify-between">
-                <span className="text-blue-500">Durasi sebenarnya</span>
-                <span className="font-semibold text-blue-700">{result.exact}</span>
+          <button
+            onClick={() => setPage("cari-skema")}
+            className="w-full bg-white rounded-2xl shadow-lg p-8 text-left hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer group"
+          >
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
               </div>
-              <div className="flex justify-between">
-                <span className="text-blue-500">Durasi pembulatan</span>
-                <span className="font-semibold text-blue-700">{result.rounded}</span>
-              </div>
-              <div className="flex justify-between border-t border-blue-200 pt-2">
-                <span className="text-blue-600 font-medium">Tarif Parkir</span>
-                <span className="font-bold text-blue-800">{result.fee === 0 ? "Gratis" : formatRupiah(result.fee)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-blue-600 font-medium">Tarif Inap</span>
-                <span className="font-bold text-blue-800">{formatRupiah(0)}</span>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800 mb-1">Cari Skema</h2>
+                <p className="text-gray-500 text-sm">Temukan skema tarif parkir berbagai tempat</p>
               </div>
             </div>
-          )}
+          </button>
         </div>
+
+        <p className="text-center text-gray-400 text-sm mt-10">Parkir Calc v1.0</p>
       </div>
     </div>
   )
 }
-
-export default App
